@@ -1,41 +1,34 @@
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, ResponsiveContainer, XAxis, LabelList } from "recharts";
 
 type Datum = { label: string; value: number };
 
 export default function GrowthBars({ data }: { data: Datum[] }) {
   return (
-    <div className="h-64">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
-          <XAxis
-            dataKey="label"
-            tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 12 }}
-          />
-          <YAxis
-            tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 12 }}
-            tickFormatter={(v) => `${v}%`}
-            width={48}
-          />
-          <Tooltip
-            contentStyle={{
-              background: "#0f1629",
-              border: "1px solid rgba(255,255,255,0.1)",
-            }}
-            labelStyle={{ color: "white" }}
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id="growthBar" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stopColor="#010205" />
+            <stop offset="34%" stopColor="#0C1731" />
+            <stop offset="100%" stopColor="#0C1731" />
+          </linearGradient>
+        </defs>
+        <XAxis
+          dataKey="label"
+          tick={{ fill: "#ffffff", fontSize: 12 }}
+          axisLine={false}
+          tickLine={false}
+        />
+        <Bar dataKey="value" fill="url(#growthBar)" radius={[4, 4, 0, 0]}>
+          <LabelList
+            dataKey="value"
+            position="top"
             formatter={(v) => `${v}%`}
+            fill="#ffffff"
+            fontSize={12}
           />
-          <Bar dataKey="value" fill="#60a5fa" radius={[4, 4, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
   );
 }
