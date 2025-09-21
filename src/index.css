@@ -26,3 +26,32 @@
     Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji";
 }
+
+/* Simple fade-in animations for dialog */
+@keyframes fade-in-bg {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in-panel {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-fade-bg {
+  animation: fade-in-bg 180ms ease-out both;
+}
+
+.animate-fade-in {
+  animation: fade-in-panel 200ms ease-out both;
+}
