@@ -3,6 +3,7 @@ import GdpLine from "./components/GdpLine";
 import GrowthBars from "./components/GrowthBars";
 import BreakdownBars from "./components/BreakdownBars";
 import { fetchAllLatest, computeGdpLevelsFromRates } from "./lib/pyth";
+import { buildDashboardCsv, downloadCsv } from "./lib/csv";
 
 function App() {
   const [lineData, setLineData] = useState<{ date: string; value: number }[]>(
@@ -80,7 +81,20 @@ function App() {
             </div>
 
             <div className="flex items-center gap-3">
-              <button className="inline-flex items-center gap-2 rounded-md border border-panel-stroke  bg-panel hover:bg-panel-stroke transition-colors duration-300 cursor-pointer px-4 py-2.5 text-xs">
+              <button
+                onClick={() => {
+                  const csv = buildDashboardCsv({
+                    latestTrillions,
+                    peakTrillions,
+                    yoyPercent: yoy,
+                    levels: lineData,
+                    yearlyRates: growthData,
+                    breakdown: breakdownData,
+                  });
+                  downloadCsv("us_gdp_dashboard.csv", csv);
+                }}
+                className="inline-flex items-center gap-2 rounded-md border border-panel-stroke  bg-panel hover:bg-panel-stroke transition-colors duration-300 cursor-pointer px-4 py-2.5 text-xs"
+              >
                 <img
                   className="h-4"
                   src="/assets/icons/download.svg"
