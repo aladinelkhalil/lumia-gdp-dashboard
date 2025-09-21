@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import GdpLine from "./components/GdpLine";
 import GrowthBars from "./components/GrowthBars";
 import BreakdownBars from "./components/BreakdownBars";
-import { fetchTimeseries, mapTimeseriesToChart } from "./lib/pyth";
+import { fetchAllLatest, computeGdpLevelsFromRates } from "./lib/pyth";
 
 function App() {
   const [lineData, setLineData] = useState<{ date: string; value: number }[]>(
@@ -11,36 +11,50 @@ function App() {
   const [growthData, setGrowthData] = useState<
     { label: string; value: number }[]
   >([]);
+  const [breakdownData, setBreakdownData] = useState<
+    { label: string; value: number }[]
+  >([
+    { label: "PPI", value: 0 },
+    { label: "CORE PPI", value: 0 },
+    { label: "PPI INDEX", value: 0 },
+  ]);
+  const [yoy, setYoy] = useState<number>(0);
+  const [latestTrillions, setLatestTrillions] = useState<number>(0);
+  const [peakTrillions, setPeakTrillions] = useState<number>(0);
 
   useEffect(() => {
-    const feedId = import.meta.env.VITE_PYTH_GDP_FEED_ID || "";
-    if (!feedId) {
-      const mock = [
-        { date: new Date("2020").toISOString(), value: 3_400_000 },
-        { date: new Date("2021").toISOString(), value: 900_000_000 },
-        { date: new Date("2022").toISOString(), value: 1_900_000 },
-        { date: new Date("2023").toISOString(), value: 2_500_000 },
-        { date: new Date("2024").toISOString(), value: 2_200_000 },
-        { date: new Date("2025").toISOString(), value: 1_300_000 },
-      ];
-      setLineData(mock);
-      setGrowthData([
-        { label: "2020", value: 3.4 },
-        { label: "2021", value: 5.9 },
-        { label: "2022", value: 1.9 },
-        { label: "2023", value: 2.5 },
-        { label: "2024", value: 2.2 },
-        { label: "2025", value: 0.3 },
-      ]);
-      return;
+    let cancelled = false;
+    let timer: number | undefined;
+
+    async function loadAll() {
+      try {
+        const { rates, breakdown, yoy } = await fetchAllLatest();
+        if (!cancelled) {
+          setGrowthData(rates);
+          const levelSeries = computeGdpLevelsFromRates(rates, 21.54, 2020);
+          setLineData(levelSeries);
+          setBreakdownData(breakdown);
+
+          if (levelSeries.length) {
+            const values = levelSeries.map((d) => d.value);
+            const latest = values[values.length - 1];
+            const peak = Math.max(...values);
+            setLatestTrillions(latest / 1_000_000_000_000);
+            setPeakTrillions(peak / 1_000_000_000_000);
+          }
+
+          setYoy(yoy);
+        }
+      } catch {}
     }
 
-    (async () => {
-      try {
-        const res = await fetchTimeseries(feedId, { interval: "1mo" });
-        setLineData(mapTimeseriesToChart(res));
-      } catch {}
-    })();
+    loadAll();
+    timer = window.setInterval(loadAll, 60_000);
+
+    return () => {
+      cancelled = true;
+      if (timer) window.clearInterval(timer);
+    };
   }, []);
 
   return (
@@ -103,7 +117,9 @@ function App() {
                 />
                 Latest
               </div>
-              <div className="font-integral text-5xl">$27.5T</div>
+              <div className="font-integral text-5xl">
+                ${latestTrillions.toFixed(2)}T
+              </div>
             </div>
             <div>
               <div className="flex items-center gap-2 text-sm uppercase">
@@ -114,14 +130,19 @@ function App() {
                 />
                 YoY Growth
               </div>
-              <div className="font-integral text-5xl">+2.4% </div>
+              <div className="font-integral text-5xl">
+                {yoy >= 0 ? "+" : ""}
+                {yoy.toFixed(2)}%
+              </div>
             </div>
             <div>
               <div className="flex items-center gap-2 text-sm uppercase">
                 <img className="h-3" src="/assets/icons/trend.svg" alt="peak" />
                 All-time Peak
               </div>
-              <div className="font-integral text-5xl">$27.5T</div>
+              <div className="font-integral text-5xl">
+                ${peakTrillions.toFixed(2)}T
+              </div>
             </div>
           </div>
 
@@ -154,16 +175,9 @@ function App() {
                   <h2 className="text-sm font-medium uppercase">
                     GDP Breakdown
                   </h2>
-                  <div className="text-xs text-white/60">2025 ▾</div>
                 </div>
                 <div className="flex-1">
-                  <BreakdownBars
-                    data={[
-                      { label: "PPI", value: 11.43 },
-                      { label: "CORE PPI", value: 17.87 },
-                      { label: "PPI INDEX", value: 67.91 },
-                    ]}
-                  />
+                  <BreakdownBars data={breakdownData} />
                 </div>
               </div>
             </aside>
