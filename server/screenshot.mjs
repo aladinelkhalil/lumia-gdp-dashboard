@@ -1,9 +1,13 @@
 import express from "express";
 import cors from "cors";
-import puppeteer from "puppeteer";
+import puppeteer, { executablePath } from "puppeteer";
 
 const app = express();
 app.use(cors());
+
+app.get("/", (_req, res) => {
+  res.status(200).send("ok");
+});
 
 app.get("/screenshot", async (req, res) => {
   const url = String(req.query.url || "http://localhost:5173/");
@@ -12,11 +16,17 @@ app.get("/screenshot", async (req, res) => {
 
   let browser = null;
   try {
+    const execPath = executablePath();
+    if (!execPath) {
+      throw new Error("Puppeteer executablePath not resolved");
+    }
     browser = await puppeteer.launch({
-      headless: true,
+      executablePath: execPath,
+      headless: "new",
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
         "--disable-gpu",
         `--window-size=${width},${height}`,
       ],
@@ -37,7 +47,7 @@ app.get("/screenshot", async (req, res) => {
 });
 
 const port = Number(process.env.PORT || 8787);
-app.listen(port, () => {
+app.listen(port, "0.0.0.0", () => {
   // eslint-disable-next-line no-console
   console.log(`Screenshot server listening on :${port}`);
 });

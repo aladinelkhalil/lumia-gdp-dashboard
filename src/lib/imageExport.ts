@@ -2,9 +2,12 @@ export async function downloadElementPngViaServer(
   url: string,
   filename: string
 ) {
-  const server =
-    import.meta.env.VITE_SCREENSHOT_URL || "http://localhost:8787/screenshot";
-  const endpoint = new URL(server);
+  let serverBase =
+    import.meta.env.VITE_SCREENSHOT_URL || "http://localhost:8787";
+  if (!/^https?:\/\//i.test(serverBase)) {
+    serverBase = `https://${serverBase}`;
+  }
+  const endpoint = new URL("/screenshot", serverBase);
   endpoint.searchParams.set("url", url);
   endpoint.searchParams.set("w", "1920");
   endpoint.searchParams.set("h", "1080");

@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: lumia-us-gdp-screenshot
+    env: node
+    plan: free
+    buildCommand: bash render-build.sh
+    startCommand: node server/screenshot.mjs
+    autoDeploy: true
+    region: oregon
+    healthCheckPath: /
+    envVars:
+      - key: PUPPETEER_CACHE_DIR
+        value: /opt/render/project/src/.cache/puppeteer
+
+  - type: web
+    name: lumia-us-gdp-client
+    env: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    envVars:
+      - key: VITE_SCREENSHOT_URL
+        value: https://lumia-us-gdp-screenshot.onrender.com
