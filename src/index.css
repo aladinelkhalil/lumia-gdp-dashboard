@@ -55,3 +55,17 @@
 .animate-fade-in {
   animation: fade-in-panel 200ms ease-out both;
 }
+
+/* Splash screen fade-out */
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-fade-out {
+  animation: fade-out 400ms ease-in forwards;
+}

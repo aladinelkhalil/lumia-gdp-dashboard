@@ -24,6 +24,8 @@ function App() {
   const [latestTrillions, setLatestTrillions] = useState<number>(0);
   const [peakTrillions, setPeakTrillions] = useState<number>(0);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isSplashVisible, setIsSplashVisible] = useState(true);
+  const [isSplashFading, setIsSplashFading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,14 +110,57 @@ function App() {
     });
     return () => {
       for (const img of images) {
-        // break references for GC
         img.src = "";
       }
     };
   }, []);
 
+  // Simple timed splash screen: show for 1s, then fade out and unmount
+  useEffect(() => {
+    let startFadeTimer: number | undefined;
+    let removeTimer: number | undefined;
+
+    startFadeTimer = window.setTimeout(() => setIsSplashFading(true), 1_000);
+    removeTimer = window.setTimeout(() => setIsSplashVisible(false), 1_400);
+
+    return () => {
+      if (startFadeTimer) window.clearTimeout(startFadeTimer);
+      if (removeTimer) window.clearTimeout(removeTimer);
+    };
+  }, []);
+
   return (
     <div>
+      {isSplashVisible ? (
+        <div
+          className={
+            "p-19 fixed inset-0 z-50 text-white bg-header " +
+            (isSplashFading ? " animate-fade-out" : "")
+          }
+        >
+          <img
+            className="absolute z-10 top-24 right-0"
+            src="/assets/full_map.svg"
+            alt="Full Map USA"
+          />
+          <img
+            className="absolute top-25 h-30 z-20"
+            src="/assets/logos/lumia_white.svg"
+            alt="Lumia"
+          />
+          <div className="absolute bottom-20 left-20">
+            <img
+              className="w-44 mb-6"
+              src="/assets/us_flag_splash.svg"
+              alt="US Flag"
+            />
+            <div className="font-integral leading-1 tracking-tight">
+              <div className="text-6xl">US GDP</div>
+              <div className="text-6xl">DASHBOARD</div>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <div className="relative text-white">
         <div className="h-1 bg-red w-full" />
         <header>
