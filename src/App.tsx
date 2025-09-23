@@ -26,6 +26,7 @@ function App() {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isSplashVisible, setIsSplashVisible] = useState(true);
   const [isSplashFading, setIsSplashFading] = useState(false);
+  const [isActionsOpen, setIsActionsOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -134,29 +135,29 @@ function App() {
       {isSplashVisible ? (
         <div
           className={
-            "p-19 fixed inset-0 z-50 text-white bg-header " +
+            "p-6 sm:p-10 md:p-19 fixed inset-0 z-50 text-white bg-header " +
             (isSplashFading ? " animate-fade-out" : "")
           }
         >
           <img
-            className="absolute z-10 top-24 right-0"
+            className="absolute z-10 top-1/3 scale-200 sm:scale-none sm:top-24 max-sm:left-1/4 sm:right-0"
             src="/assets/full_map.svg"
             alt="Full Map USA"
           />
           <img
-            className="absolute top-25 h-30 z-20"
+            className="absolute top-20 sm:top-25 h-20 sm:h-30 z-20 left-6 sm:left-19"
             src="/assets/logos/lumia_white.svg"
             alt="Lumia"
           />
-          <div className="absolute bottom-20 left-20">
+          <div className="absolute bottom-24 z-20 left-6 sm:bottom-16 sm:left-12 md:bottom-20 md:left-20">
             <img
-              className="w-44 mb-6"
+              className="w-28 sm:w-36 md:w-44 mb-6"
               src="/assets/us_flag_splash.svg"
               alt="US Flag"
             />
             <div className="font-integral leading-1 tracking-tight">
-              <div className="text-6xl">US GDP</div>
-              <div className="text-6xl">DASHBOARD</div>
+              <div className="text-4xl sm:text-5xl md:text-6xl">US GDP</div>
+              <div className="text-4xl sm:text-5xl md:text-6xl">DASHBOARD</div>
             </div>
           </div>
         </div>
@@ -165,116 +166,244 @@ function App() {
         <div className="h-1 bg-red w-full" />
         <header>
           <img
-            className="w-full absolute top-0 -z-10"
+            className="hidden sm:block w-full absolute top-0 -z-10 h-[380px] md:h-auto"
             src="/assets/background.svg"
             alt="Header Background"
           />
         </header>
-        <main className="ml-46.5 mr-33.5 mt-19">
-          <img className="w-42 h-5" src="/assets/stars.svg" alt="Stars" />
+        <main className="mx-4 sm:mt-10 sm:mx-8 md:ml-46.5 md:mr-33.5 md:mt-19">
+          <div className="relative sm:static bg-header sm:bg-transparent rounded-b-xl sm:rounded-none -mx-4 sm:mx-0 pb-0 sm:pb-0">
+            <img
+              className="absolute inset-0 -z-10 w-full sm:h-full h-64 object-cover sm:hidden"
+              src="/assets/background.svg"
+              alt=""
+              aria-hidden="true"
+            />
+            <img
+              className="absolute top-6 left-4 sm:static w-42 h-5"
+              src="/assets/stars.svg"
+              alt="Stars"
+            />
 
-          <div className="mt-8 flex items-center justify-between">
-            <div className="flex items-end gap-x-3">
-              <img className="w-14" src="/assets/us_flag.svg" alt="US Flag" />
-              <h1 className="font-integral text-4xl tracking-tight">
-                US GDP DASHBOARD
-              </h1>
+            <div className="ml-4 sm:ml-0 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-end sm:gap-x-3">
+                <img
+                  className="w-14 mt-16"
+                  src="/assets/us_flag.svg"
+                  alt="US Flag"
+                />
+                <h1 className="font-integral text-2xl sm:text-4xl tracking-tight">
+                  US GDP DASHBOARD
+                </h1>
+              </div>
+
+              {/* Mobile: hamburger menu */}
+              <div className="absolute top-0 right-0 sm:hidden">
+                <button
+                  onClick={() => setIsActionsOpen((v) => !v)}
+                  aria-expanded={isActionsOpen}
+                  className="absolute top-4 right-4 rounded-md px-3 py-2 text-xs outline-none"
+                >
+                  {isActionsOpen ? (
+                    <svg
+                      className="h-8 w-8 transition-transform duration-200 rotate-90"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M6 6l12 12M18 6L6 18"
+                        stroke="#ffffff"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="h-8 w-8 transition-transform duration-200"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M3 6h18M3 12h18M3 18h18"
+                        stroke="#ffffff"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  )}
+                </button>
+                <div
+                  className={
+                    "absolute right-4 mt-16 w-[min(90vw,16rem)] rounded-xl border border-white/10 bg-panel shadow-2xl p-2 transition-opacity duration-200 " +
+                    (isActionsOpen
+                      ? "opacity-100 pointer-events-auto"
+                      : "opacity-0 pointer-events-none")
+                  }
+                  aria-hidden={!isActionsOpen}
+                >
+                  <button
+                    onClick={() => {
+                      const csv = buildDashboardCsv({
+                        latestTrillions,
+                        peakTrillions,
+                        yoyPercent: yoy,
+                        levels: lineData,
+                        yearlyRates: growthData,
+                        breakdown: breakdownData,
+                      });
+                      downloadCsv("us_gdp_dashboard.csv", csv);
+                      setIsActionsOpen(false);
+                    }}
+                    className="inline-flex w-full uppercase items-center justify-center gap-2 bg-panel cursor-pointer px-3 py-4 text-xs"
+                  >
+                    <img
+                      className="h-4"
+                      src="/assets/icons/download.svg"
+                      alt="download"
+                    />
+                    Download as CSV
+                  </button>
+                  <div className="mx-auto h-px bg-radial from-white/30 to-transparent w-32" />
+                  <button
+                    onClick={async () => {
+                      const targetUrl = window.location.href;
+                      await downloadElementPngViaServer(
+                        targetUrl,
+                        "us_gdp_dashboard.png"
+                      );
+                      setIsActionsOpen(false);
+                    }}
+                    className="inline-flex w-full uppercase items-center justify-center gap-2 bg-panel cursor-pointer px-3 py-4 text-xs"
+                  >
+                    <img
+                      className="h-4"
+                      src="/assets/icons/image.svg"
+                      alt="export"
+                    />
+                    Export PNG
+                  </button>
+                  <div className="mx-auto h-px bg-radial from-white/30 to-transparent w-32" />
+                  <button
+                    onClick={() => {
+                      openShare();
+                      setIsActionsOpen(false);
+                    }}
+                    className="inline-flex w-full uppercase items-center justify-center gap-2 bg-panel cursor-pointer px-3 py-4 text-xs"
+                  >
+                    <img
+                      className="h-4"
+                      src="/assets/icons/share.svg"
+                      alt="share"
+                    />
+                    Share link
+                  </button>
+                </div>
+              </div>
+
+              {/* Desktop/tablet: inline actions */}
+              <div className="hidden sm:flex flex-wrap items-center gap-3 sm:justify-end">
+                <button
+                  onClick={() => {
+                    const csv = buildDashboardCsv({
+                      latestTrillions,
+                      peakTrillions,
+                      yoyPercent: yoy,
+                      levels: lineData,
+                      yearlyRates: growthData,
+                      breakdown: breakdownData,
+                    });
+                    downloadCsv("us_gdp_dashboard.csv", csv);
+                  }}
+                  className="inline-flex w-full sm:w-auto uppercase items-center justify-center gap-2 rounded-md border border-panel-stroke  bg-panel hover:bg-panel-stroke transition-colors duration-300 cursor-pointer px-4 py-2.5 text-xs"
+                >
+                  <img
+                    className="h-4"
+                    src="/assets/icons/download.svg"
+                    alt="download"
+                  />
+                  Download as CSV
+                </button>
+                <button
+                  onClick={async () => {
+                    const targetUrl = window.location.href;
+                    await downloadElementPngViaServer(
+                      targetUrl,
+                      "us_gdp_dashboard.png"
+                    );
+                  }}
+                  className="inline-flex w-full sm:w-auto uppercase items-center justify-center gap-2 rounded-md border border-panel-stroke  bg-panel hover:bg-panel-stroke transition-colors duration-300 cursor-pointer px-4 py-2.5 text-xs"
+                >
+                  <img
+                    className="h-4"
+                    src="/assets/icons/image.svg"
+                    alt="export"
+                  />
+                  Export PNG
+                </button>
+                <button
+                  onClick={openShare}
+                  className="inline-flex w-full sm:w-auto uppercase items-center justify-center gap-2 rounded-md border border-panel-stroke  bg-panel hover:bg-panel-stroke transition-colors duration-300 cursor-pointer px-4 py-2.5 text-xs"
+                >
+                  <img
+                    className="h-4"
+                    src="/assets/icons/share.svg"
+                    alt="share"
+                  />
+                  Share link
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => {
-                  const csv = buildDashboardCsv({
-                    latestTrillions,
-                    peakTrillions,
-                    yoyPercent: yoy,
-                    levels: lineData,
-                    yearlyRates: growthData,
-                    breakdown: breakdownData,
-                  });
-                  downloadCsv("us_gdp_dashboard.csv", csv);
-                }}
-                className="inline-flex uppercase items-center gap-2 rounded-md border border-panel-stroke  bg-panel hover:bg-panel-stroke transition-colors duration-300 cursor-pointer px-4 py-2.5 text-xs"
-              >
-                <img
-                  className="h-4"
-                  src="/assets/icons/download.svg"
-                  alt="download"
-                />
-                Download as CSV
-              </button>
-              <button
-                onClick={async () => {
-                  const targetUrl = window.location.href;
-                  await downloadElementPngViaServer(
-                    targetUrl,
-                    "us_gdp_dashboard.png"
-                  );
-                }}
-                className="inline-flex uppercase items-center gap-2 rounded-md border border-panel-stroke  bg-panel hover:bg-panel-stroke transition-colors duration-300 cursor-pointer px-4 py-2.5 text-xs"
-              >
-                <img
-                  className="h-4"
-                  src="/assets/icons/image.svg"
-                  alt="export"
-                />
-                Export PNG
-              </button>
-              <button
-                onClick={openShare}
-                className="inline-flex uppercase items-center gap-2 rounded-md border border-panel-stroke  bg-panel hover:bg-panel-stroke transition-colors duration-300 cursor-pointer px-4 py-2.5 text-xs"
-              >
-                <img
-                  className="h-4"
-                  src="/assets/icons/share.svg"
-                  alt="share"
-                />
-                Share link
-              </button>
+            <div className="mt-8 mx-2 flex justify-center sm:justify-start gap-x-6 gap-y-6 sm:gap-y-0 sm:gap-x-24">
+              <div>
+                <div className="flex items-center gap-2 text-sm uppercase">
+                  <img
+                    className="h-3"
+                    src="/assets/icons/calendar.svg"
+                    alt="latest"
+                  />
+                  <span className="text-xs sm:text-normal">Latest</span>
+                </div>
+                <div className="font-integral text-2xl sm:text-5xl">
+                  ${latestTrillions.toFixed(2)}T
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 text-sm uppercase">
+                  <img
+                    className="h-3"
+                    src="/assets/icons/arrow_up.svg"
+                    alt="yoy"
+                  />
+                  <span className="text-xs sm:text-normal">YoY Growth</span>
+                </div>
+                <div className="font-integral text-2xl sm:text-5xl">
+                  {yoy >= 0 ? "+" : ""}
+                  {yoy.toFixed(2)}%
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 text-sm uppercase">
+                  <img
+                    className="h-3"
+                    src="/assets/icons/trend.svg"
+                    alt="peak"
+                  />
+                  <span className="text-xs sm:text-normal">All-time Peak</span>
+                </div>
+                <div className="font-integral text-2xl sm:text-5xl">
+                  ${peakTrillions.toFixed(2)}T
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="mt-9 flex gap-x-24">
-            <div>
-              <div className="flex items-center gap-2 text-sm uppercase">
-                <img
-                  className="h-3"
-                  src="/assets/icons/calendar.svg"
-                  alt="latest"
-                />
-                Latest
-              </div>
-              <div className="font-integral text-5xl">
-                ${latestTrillions.toFixed(2)}T
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 text-sm uppercase">
-                <img
-                  className="h-3"
-                  src="/assets/icons/arrow_up.svg"
-                  alt="yoy"
-                />
-                YoY Growth
-              </div>
-              <div className="font-integral text-5xl">
-                {yoy >= 0 ? "+" : ""}
-                {yoy.toFixed(2)}%
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 text-sm uppercase">
-                <img className="h-3" src="/assets/icons/trend.svg" alt="peak" />
-                All-time Peak
-              </div>
-              <div className="font-integral text-5xl">
-                ${peakTrillions.toFixed(2)}T
-              </div>
-            </div>
-          </div>
-
-          <div className="h-[53vh] mt-15 grid grid-cols-12 gap-6">
-            <section className="col-span-12 lg:col-span-8 h-full rounded-xl bg-panel border border-panel-stroke flex flex-col">
+          <div className="mt-15 grid grid-cols-12 gap-6 h-auto md:h-[53vh]">
+            <section className="col-span-12 lg:col-span-8 h-[320px] md:h-full rounded-xl bg-panel border border-panel-stroke flex flex-col">
               <h2 className="mb-4 text-sm font-medium uppercase p-6">
                 GDP Over Time
               </h2>
@@ -288,8 +417,8 @@ function App() {
                 )}
               </div>
             </section>
-            <aside className="col-span-12 lg:col-span-4 h-full grid grid-rows-2 gap-5">
-              <div className="h-full rounded-xl bg-panel border border-panel-stroke pt-6 px-6 pb-4 flex flex-col">
+            <aside className="col-span-12 lg:col-span-4 h-auto md:h-full grid grid-rows-1 md:grid-rows-2 gap-5">
+              <div className="h-[240px] md:h-full rounded-xl bg-panel text-white border border-panel-stroke pt-6 px-6 pb-4 flex flex-col">
                 <h2 className="mb-4 text-sm font-medium uppercase">
                   GDP Growth Rate
                 </h2>
@@ -297,7 +426,7 @@ function App() {
                   <GrowthBars data={growthData} />
                 </div>
               </div>
-              <div className="h-full rounded-xl bg-panel border border-panel-stroke p-6 flex flex-col">
+              <div className="h-[240px] md:h-full rounded-xl bg-panel text-white border border-panel-stroke p-6 flex flex-col">
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-sm font-medium uppercase">
                     GDP Breakdown
@@ -504,7 +633,7 @@ function App() {
         </div>
       ) : null}
 
-      <footer className="text-sm text-panel mt-10">
+      <footer className="text-sm text-panel mt-10 sm:mb-0 mb-10">
         <span className="flex justify-center items-center gap-x-5 w-full">
           <a
             href="https://lumia.org"

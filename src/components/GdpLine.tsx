@@ -24,8 +24,8 @@ export default function GdpLine({ data }: { data: Datum[] }) {
   );
 
   return (
-    <div className="h-full w-full">
-      <ResponsiveContainer width="110%" height="100%">
+    <div className="h-full sm:w-[110%] w-full overflow-hidden">
+      <ResponsiveContainer className="w-full sm:w-[110%] h-full">
         <AreaChart
           data={series}
           margin={{ top: 8, right: 0, left: 16, bottom: 40 }}

@@ -5,7 +5,7 @@ type Datum = { label: string; value: number };
 export default function GrowthBars({ data }: { data: Datum[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+      <BarChart data={data} margin={{ top: 24, right: 8, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="growthBar" x1="0" y1="1" x2="0" y2="0">
             <stop offset="0%" stopColor="#010205" />
