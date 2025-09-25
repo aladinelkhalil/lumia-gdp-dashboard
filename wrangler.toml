@@ -26,7 +26,7 @@ name = "lumia-gdp-dashboard-preview"
 
 [[env.preview.kv_namespaces]]
 binding = "CACHE"
-preview_id = "2f401998f07d4f8c94e03a759cb7fba7"
+id = "2f401998f07d4f8c94e03a759cb7fba7"
 
 [env.preview.browser]
 binding = "BROWSER"
