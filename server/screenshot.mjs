@@ -78,6 +78,8 @@ app.get("/screenshot", async (req, res) => {
   const url = String(req.query.url || "http://localhost:5173/");
   const width = Number(req.query.w || 1440);
   const height = Number(req.query.h || 900);
+  let delayMs = Number(req.query.delay);
+  if (!Number.isFinite(delayMs) || delayMs < 0) delayMs = 1000;
 
   try {
     const browser = await getBrowser();
@@ -107,6 +109,9 @@ app.get("/screenshot", async (req, res) => {
     await page
       .waitForNetworkIdle({ idleTime: 500, timeout: 10000 })
       .catch(() => {});
+
+    // Wait a moment to allow the app to transition past any splash screen
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
 
     const png = await page.screenshot({ type: "png", fullPage: false });
     await page.close();
