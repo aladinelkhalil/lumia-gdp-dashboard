@@ -4,7 +4,7 @@ import { gdpFeeds, allFeedIds, extraFeedIds } from "./gdpIds";
 const DEFAULT_HERMES = "https://hermes.pyth.network";
 
 const hermes = axios.create({
-  baseURL: DEFAULT_HERMES,
+  baseURL: import.meta.env.VITE_HERMES_BASE_URL || DEFAULT_HERMES,
   timeout: 10_000,
 });
 
@@ -17,11 +17,47 @@ type HermesLatestResponse = {
   parsed: HermesLatestPrice[];
 };
 
+function getServerBaseUrl() {
+  let serverBase =
+    import.meta.env.VITE_SCREENSHOT_URL || "http://localhost:8787";
+  if (!/^https?:\/\//i.test(serverBase)) {
+    serverBase = `https://${serverBase}`;
+  }
+  return serverBase;
+}
+
 export async function fetchLatestForIds(ids: string[]) {
-  const { data } = await hermes.get("/v2/updates/price/latest", {
-    params: { ids },
-  });
-  return data as HermesLatestResponse;
+  try {
+    const { data } = await hermes.get("/v2/updates/price/latest", {
+      params: { ids },
+    });
+    // Fire-and-forget: persist latest successful payload to server cache
+    try {
+      const base = getServerBaseUrl();
+      void fetch(new URL("/cache/latest", base).toString(), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(data),
+        keepalive: true,
+      }).catch(() => {});
+    } catch {}
+    return data as HermesLatestResponse;
+  } catch (primaryError) {
+    // Fallback to server-side cached JSON if available
+    try {
+      const base = getServerBaseUrl();
+      const res = await fetch(new URL("/cache/latest", base).toString(), {
+        method: "GET",
+      });
+      if (!res.ok) throw new Error(`fallback ${res.status}`);
+      const cached = (await res.json()) as HermesLatestResponse;
+      if (!cached || !Array.isArray((cached as any).parsed))
+        throw new Error("invalid cache");
+      return cached;
+    } catch {
+      throw primaryError;
+    }
+  }
 }
 
 export type PpiBreakdown = { label: string; value: number }[];

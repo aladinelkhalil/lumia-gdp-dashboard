@@ -1,9 +1,12 @@
 import express from "express";
 import cors from "cors";
+import fs from "fs";
+import path from "path";
 import puppeteer, { executablePath, type Browser } from "puppeteer";
 
 const app = express();
 app.use(cors());
+app.use(express.json({ limit: "1mb" }));
 
 app.get("/", (_req, res) => {
   res.status(200).send("ok");
@@ -41,6 +44,36 @@ async function getBrowser(): Promise<Browser> {
   return sharedBrowserPromise;
 }
 
+// Simple JSON cache for latest Hermes response
+const DATA_DIR = path.resolve(
+  path.dirname(new URL(import.meta.url).pathname),
+  "../.cache/data"
+);
+const DATA_FILE = path.join(DATA_DIR, "latest.json");
+
+app.get("/cache/latest", (_req, res) => {
+  try {
+    if (!fs.existsSync(DATA_FILE))
+      return res.status(404).json({ error: "not_found" });
+    const buf = fs.readFileSync(DATA_FILE);
+    res.setHeader("Content-Type", "application/json");
+    return res.status(200).send(buf);
+  } catch (e) {
+    return res.status(500).json({ error: String(e) });
+  }
+});
+
+app.post("/cache/latest", (req, res) => {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    const payload = req.body ?? {};
+    fs.writeFileSync(DATA_FILE, JSON.stringify(payload, null, 2), "utf8");
+    return res.status(200).json({ ok: true });
+  } catch (e) {
+    return res.status(500).json({ error: String(e) });
+  }
+});
+
 app.get("/screenshot", async (req, res) => {
   const url = String(req.query.url || "http://localhost:5173/");
   const width = Number(req.query.w || 1440);
@@ -49,7 +82,21 @@ app.get("/screenshot", async (req, res) => {
   try {
     const browser = await getBrowser();
     const page = await browser.newPage();
-    await page.setViewport({ width, height, deviceScaleFactor: 2 });
+    await page.setViewport({ width, height, deviceScaleFactor: 1.5 });
+
+    // Block known third-party assets that are not needed for rendering
+    await page.setRequestInterception(true);
+    page.on("request", (req) => {
+      const urlStr = req.url();
+      const type = req.resourceType();
+      const isThirdParty =
+        !urlStr.startsWith("http://localhost") &&
+        !urlStr.startsWith("https://lumia-us-gdp-client") &&
+        !urlStr.startsWith("https://lumia-us-gdp.onrender.com");
+      const isHeavy = type === "media" || type === "font" || type === "image";
+      if (isThirdParty && isHeavy) return req.abort();
+      return req.continue();
+    });
 
     // Navigate with a faster strategy; then wait for fonts
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 });
@@ -61,7 +108,7 @@ app.get("/screenshot", async (req, res) => {
       .waitForNetworkIdle({ idleTime: 500, timeout: 10_000 })
       .catch(() => {});
 
-    const png = await page.screenshot({ type: "png", fullPage: true });
+    const png = await page.screenshot({ type: "png", fullPage: false });
     await page.close();
 
     res.setHeader("Content-Type", "image/png");
