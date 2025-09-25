@@ -19,7 +19,7 @@ type HermesLatestResponse = {
 
 function getServerBaseUrl() {
   let serverBase =
-    import.meta.env.VITE_SCREENSHOT_URL || "http://localhost:8787";
+    import.meta.env.VITE_SCREENSHOT_URL || window.location.origin;
   if (!/^https?:\/\//i.test(serverBase)) {
     serverBase = `https://${serverBase}`;
   }
@@ -34,7 +34,7 @@ export async function fetchLatestForIds(ids: string[]) {
     // Fire-and-forget: persist latest successful payload to server cache
     try {
       const base = getServerBaseUrl();
-      void fetch(new URL("/cache/latest", base).toString(), {
+      void fetch(new URL("/api/cache/latest", base).toString(), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(data),
@@ -46,7 +46,7 @@ export async function fetchLatestForIds(ids: string[]) {
     // Fallback to server-side cached JSON if available
     try {
       const base = getServerBaseUrl();
-      const res = await fetch(new URL("/cache/latest", base).toString(), {
+      const res = await fetch(new URL("/api/cache/latest", base).toString(), {
         method: "GET",
       });
       if (!res.ok) throw new Error(`fallback ${res.status}`);
