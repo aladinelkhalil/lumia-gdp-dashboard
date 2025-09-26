@@ -4,7 +4,7 @@ export async function onRequestGet(context) {
   const { request, env } = context;
   const url = new URL(request.url);
   
-  const targetUrl = url.searchParams.get('url') || 'https://lumia-gdp-dashboard.pages.dev/';
+  const targetUrl = url.searchParams.get('url') || `https://${new URL(request.url).hostname}/`;
   const width = parseInt(url.searchParams.get('w') || '1440');
   const height = parseInt(url.searchParams.get('h') || '900');
   const delay = parseInt(url.searchParams.get('delay') || '1000');
@@ -68,7 +68,8 @@ export async function onRequestGet(context) {
     
     // Cache the screenshot for 1 hour
     await env.CACHE.put(cacheKey, screenshot, {
-      expirationTtl: 60 * 60 // 1 hour
+      expirationTtl: 60 * 60, // 1 hour
+      metadata: { timestamp: Date.now() }
     });
     
     return new Response(screenshot, {
