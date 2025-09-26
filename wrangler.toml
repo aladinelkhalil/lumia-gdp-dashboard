@@ -1,0 +1,32 @@
+name = "lumia-gdp-dashboard"
+pages_build_output_dir = "dist"
+compatibility_date = "2024-09-25"
+compatibility_flags = ["nodejs_compat"]
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "7ca8fa6927d84111be6e2e5936e23e57"
+preview_id = "2f401998f07d4f8c94e03a759cb7fba7"
+
+[browser]
+binding = "BROWSER"
+
+[env.production]
+name = "lumia-gdp-dashboard"
+
+[[env.production.kv_namespaces]]
+binding = "CACHE"
+id = "7ca8fa6927d84111be6e2e5936e23e57"
+
+[env.production.browser]
+binding = "BROWSER"
+
+[env.preview]
+name = "lumia-gdp-dashboard-preview"
+
+[[env.preview.kv_namespaces]]
+binding = "CACHE"
+id = "2f401998f07d4f8c94e03a759cb7fba7"
+
+[env.preview.browser]
+binding = "BROWSER"
